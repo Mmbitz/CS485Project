@@ -14,6 +14,7 @@ const string WORD = "word";
 const string METACHAR = "metachar";
 
 // Keyword definitions.
+const string COMMENT = "#";
 const string DEFPROMPT = "defprompt";
 const string CD = "cd";
 const string LISTJOBS = "listjobs";
