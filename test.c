@@ -1,5 +1,8 @@
 //THIS IS A TEST FILE FOR THE SYSTEM CALLS, THIS SHOWS BASIC IMPLEMENTATION
 
+//WHEN USING NEXTVARIABLE TO GET THE FIRST ITEM, INSERT A char[256] = ' '; a blank at the beginning will
+//get your the first variable since no other varaibles have spaces at the beginning
+
 //256 size char arrays handle all the items
 
 #include <stdio.h>
