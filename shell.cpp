@@ -7,7 +7,7 @@
 using namespace std;
 
 // Default prompt
-const string PROMPT = "svsh > ";
+string PROMPT = "svsh > ";
 
 // Token type definitions.
 const string KEYWORD = "keyword";
@@ -132,12 +132,27 @@ bool scan(const string &line, string &token, string &type) {
 typedef void* (*state_fn)(string token_type, string token); // this solution is horrible...
 // void* null_state(string token_type, string token){}
 
+void* null_state(string token_type, string token);
+void* defprompt_state(string token_type, string token);
+
 void* null_state(string token_type, string token){
   if (token_type == METACHAR) {
     if (token == COMMENT) {
       return (void*)(*null_state); // do nothing
     }
   }
+  if (token_type == KEYWORD) {
+    if (token == DEFPROMPT) {
+      return (void*)(defprompt_state);
+    }
+  }
+}
+
+void* defprompt_state(string token_type, string token){
+  if (token_type == STRING) {
+    PROMPT = token;
+  }
+  return (void*)(null_state);
 }
 
 int main() {
