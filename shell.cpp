@@ -135,10 +135,11 @@ typedef void* (*state_fn)(string token_type, string token); // this solution is 
 void* null_state(string token_type, string token);
 void* defprompt_state(string token_type, string token);
 
+// state every line starts in
 void* null_state(string token_type, string token){
   if (token_type == METACHAR) {
     if (token == COMMENT) {
-      return (void*)(*null_state); // do nothing
+      return (void*)(*comment_state);
     }
   }
   if (token_type == KEYWORD) {
@@ -146,6 +147,11 @@ void* null_state(string token_type, string token){
       return (void*)(defprompt_state);
     }
   }
+}
+
+// special consumer state, only for comments
+void* comment_state(string token_type, string token){
+  return (void*)(comment_state);
 }
 
 void* defprompt_state(string token_type, string token){
