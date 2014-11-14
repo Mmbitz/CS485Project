@@ -6,6 +6,9 @@
 
 using namespace std;
 
+// Default prompt
+const string PROMPT = "svsh > ";
+
 // Token type definitions.
 const string KEYWORD = "keyword";
 const string VARIABLE = "variable";
@@ -124,14 +127,31 @@ bool scan(const string &line, string &token, string &type) {
 	return true;
 }
 
+// Pareser stuff
+// typedef void (*state_fn)(string, string, state_fn); // cant do this *sadface*
+typedef void* (*state_fn)(string token_type, string token); // this solution is horrible...
+// void* null_state(string token_type, string token){}
+
+void* null_state(string token_type, string token){
+  if (token_type == METACHAR) {
+    if (token == COMMENT) {
+      return (void*)(*null_state); // do nothing
+    }
+  }
+}
+
 int main() {
 	string input;
-	while(getline(cin, input)) {
+	cout << PROMPT;
+  while(getline(cin, input)) {
 		string token;
 		string type;
-		while (scan(input, token, type)) {
+		state_fn curr_state = null_state;
+    while (scan(input, token, type)) {
 			cout << "Token Type = " << type << "	Token = " << token << endl;
-		}
+		  curr_state = (state_fn)(curr_state(type, token));
+    }
+	  cout << PROMPT;
 	}
 	return 0;
 }
