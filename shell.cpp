@@ -133,6 +133,7 @@ typedef void* (*state_fn)(string token_type, string token); // this solution is 
 // void* null_state(string token_type, string token){}
 
 void* null_state(string token_type, string token);
+void* comment_state(string token_type, string token);
 void* defprompt_state(string token_type, string token);
 
 // state every line starts in
