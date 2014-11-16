@@ -1,5 +1,16 @@
 Instalation
------------
+======
+
+Installing the system calls, the guide from Dr. Griff was followed.
+
+The list of system call files that are needed are as follows:
+
+  GlobalDef.c
+  SaveVariable.c
+  GetVariable.c
+  NextVariable.c
+  
+No special algorithms were used in these files, they are mostly very straight foward and consist of basic C functions.
 
 Algorithms
 ----------
