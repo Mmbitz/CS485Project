@@ -223,9 +223,11 @@ void* cd_state(string token_type, string token, bool* done, bool* error) {
 
 void* arg_state(string token_type, string token, bool* done, bool* error) {
   cerr << "arg state" << endl;
-  if (token_type == WORD || token_type == STRING) {
+  if (token_type == WORD || token_type == STRING || token_type == VARIABLE) {
+    const char* arg = token.c_str();
+    //if ()
     // TODO: expand token from system vars
-    exec_params.push_back(token);
+    exec_params.push_back((string)(arg));
     if (tokenPosition != tokens.size()) {
       return (void*)(arg_state);
     }
@@ -239,13 +241,11 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     pid_t pid = fork();
     if (pid == 0) {
       execv(args[0], (char**)args);
+      // TODO: handle bad execs
       exit(0);
     } else {
       int status;
-      wait(&status);
-      if (!status) {
-        *error = true;
-      }
+      waitpid(pid, &status, 0);
       return (void*)(end_state);
     }
   }
