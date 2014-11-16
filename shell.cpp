@@ -243,6 +243,7 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     // TODO: fork then exec fn
     cerr << "FORK + EXEC" << endl;
   }
+  *error = true;
 }
 
 void* set_state(string token_type, string token, bool* done, bool* error) {
