@@ -136,7 +136,10 @@ void* null_state(string token_type, string token, bool* done, bool* error);
 void* comment_state(string token_type, string token, bool* done, bool* error);
 void* defprompt_state(string token_type, string token, bool* done, bool* error);
 void* cd_state(string token_type, string token, bool* done, bool* error);
+void* arg_state(string token_type, string token, bool* done, bool* error);
 void* end_state(string token_type, string token, bool* done, bool* error);
+
+vector<string> exec_params;
 
 // state every line starts in
 void* null_state(string token_type, string token, bool* done, bool* error){
@@ -156,6 +159,14 @@ void* null_state(string token_type, string token, bool* done, bool* error){
     }
     if (token == CD) {
       return (void*)(cd_state);
+    }
+    if (token == RUN) {
+      exec_params.clear();
+      if (tokenPosition == tokens.size()) {
+        *error = true;
+        return (void*)(end_state);
+      }
+      return (void*)(arg_state);
     }
   }
   *error = true;
@@ -193,6 +204,27 @@ void* cd_state(string token_type, string token, bool* done, bool* error) {
   return (void*)(end_state);
 }
 
+void* arg_state(string token_type, string token, bool* done, bool* error) {
+  cerr << "arg state" << endl;
+  if (token_type == WORD || token_type == STRING) {
+    // TODO: expand token from system vars
+    exec_params.push_back(token);
+    if (tokenPosition != tokens.size()) {
+      return (void*)(arg_state);
+    }
+    // TODO: exec fn
+    cerr << "EXEC" << endl;
+  }
+  if (token_type == KEYWORD && token == BG) {
+    if (tokenPosition != tokens.size()) {
+      *error = true;
+      return (void*)(end_state);
+    }
+    // TODO: fork then exec fn
+    cerr << "FORK + EXEC" << endl;
+  }
+}
+
 int main() {
 	string input;
 	bool done = false;
@@ -203,7 +235,7 @@ int main() {
     bool error = false;
 		state_fn curr_state = null_state;
     while (scan(input, token, type)) {
-			cout << "Token Type = " << type << "	Token = " << token << endl;
+			cout << tokenPosition << "/" << tokens.size() << ": Token Type = " << type << "	Token = " << token << endl;
 		  curr_state = (state_fn)(curr_state(type, token, &done, &error));
       if (error) {
         cerr << "ERROR!" << endl;
