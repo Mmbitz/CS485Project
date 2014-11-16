@@ -135,6 +135,7 @@ typedef void* (*state_fn)(string token_type, string token, bool* done, bool* err
 void* null_state(string token_type, string token, bool* done, bool* error);
 void* comment_state(string token_type, string token, bool* done, bool* error);
 void* defprompt_state(string token_type, string token, bool* done, bool* error);
+void* end_state(string token_type, string token, bool* done, bool* error);
 
 // state every line starts in
 void* null_state(string token_type, string token, bool* done, bool* error){
@@ -156,6 +157,12 @@ void* null_state(string token_type, string token, bool* done, bool* error){
   *error = true;
 }
 
+// should never be called except in error
+void* end_state(string token_type, string token, bool* done, bool* error) {
+  cerr << "end state" << endl;
+  *error = true;
+}
+
 // special consumer state, only for comments
 void* comment_state(string token_type, string token, bool* done, bool* error){
   cerr << "comment state" << endl;
@@ -167,7 +174,7 @@ void* defprompt_state(string token_type, string token, bool* done, bool* error){
   if (token_type == STRING) {
     PROMPT = token;
   }
-  return (void*)(null_state);
+  return (void*)(end_state);
 }
 
 int main() {
