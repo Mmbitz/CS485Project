@@ -4,8 +4,14 @@
 #include <vector>
 #include <string>
 #include <unistd.h>
+#include <sys/syscall.h>
 
 using namespace std;
+
+#define __NR_GlobalDef 315
+#define __NR_SaveVariable 316
+#define __NR_GetVariable 317
+#define __NR_NextVariable 318
 
 // Default prompt
 string PROMPT = "svsh > ";
@@ -19,6 +25,7 @@ const string METACHAR = "metachar";
 
 // Keyword definitions.
 const string COMMENT = "#";
+const string ASSIGNMENT = "=";
 const string DEFPROMPT = "defprompt";
 const string CD = "cd";
 const string LISTJOBS = "listjobs";
@@ -137,9 +144,12 @@ void* comment_state(string token_type, string token, bool* done, bool* error);
 void* defprompt_state(string token_type, string token, bool* done, bool* error);
 void* cd_state(string token_type, string token, bool* done, bool* error);
 void* arg_state(string token_type, string token, bool* done, bool* error);
+void* set_state(string token_type, string token, bool* done, bool* error);
+void* assign_state(string token_type, string token, bool* done, bool* error);
 void* end_state(string token_type, string token, bool* done, bool* error);
 
 vector<string> exec_params;
+string assign_to;
 
 // state every line starts in
 void* null_state(string token_type, string token, bool* done, bool* error){
@@ -168,6 +178,10 @@ void* null_state(string token_type, string token, bool* done, bool* error){
       }
       return (void*)(arg_state);
     }
+  }
+  if (token_type == VARIABLE) {
+    assign_to = token;
+    return (void*)(set_state);
   }
   *error = true;
 }
@@ -229,6 +243,27 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     // TODO: fork then exec fn
     cerr << "FORK + EXEC" << endl;
   }
+}
+
+void* set_state(string token_type, string token, bool* done, bool* error) {
+  cerr << "set state" << endl;
+  if (token_type == METACHAR && token == ASSIGNMENT) {
+    return (void*)(assign_state);
+  }
+  assign_to = "";
+  *error = true;
+}
+
+void* assign_state(string token_type, string token, bool* done, bool* error) {
+  if (token_type == STRING) {
+    int err = syscall(__NR_SaveVariable, assign_to.c_str(), token.c_str()); //works?
+    if (err != 0) {
+      assign_to = "";
+      return (void*)(end_state);
+    }
+  }
+  assign_to = "";
+  *error = true;
 }
 
 int main() {
