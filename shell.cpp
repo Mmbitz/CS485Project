@@ -135,6 +135,7 @@ typedef void* (*state_fn)(string token_type, string token, bool* done, bool* err
 void* null_state(string token_type, string token, bool* done, bool* error);
 void* comment_state(string token_type, string token, bool* done, bool* error);
 void* defprompt_state(string token_type, string token, bool* done, bool* error);
+void* cd_state(string token_type, string token, bool* done, bool* error);
 void* end_state(string token_type, string token, bool* done, bool* error);
 
 // state every line starts in
@@ -152,6 +153,9 @@ void* null_state(string token_type, string token, bool* done, bool* error){
     }
     if (token == DEFPROMPT) {
       return (void*)(defprompt_state);
+    }
+    if (token == CD) {
+      return (void*)(cd_state);
     }
   }
   *error = true;
@@ -173,6 +177,18 @@ void* defprompt_state(string token_type, string token, bool* done, bool* error){
   cerr << "defprompt state" << endl;
   if (token_type == STRING) {
     PROMPT = token;
+  } else {
+    *error = true;
+  }
+  return (void*)(end_state);
+}
+
+void* cd_state(string token_type, string token, bool* done, bool* error) {
+  cerr << "cd state" << endl;
+  if (token_type == WORD) {
+    // TODO: chdir()
+  } else {
+    *error = true;
   }
   return (void*)(end_state);
 }
