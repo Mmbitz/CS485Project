@@ -214,8 +214,9 @@ void* defprompt_state(string token_type, string token, bool* done, bool* error){
 void* cd_state(string token_type, string token, bool* done, bool* error) {
   cerr << "cd state" << endl;
   if (token_type == WORD) {
-    chdir(token.c_str());
-    return (void*)(end_state);
+    if (!chdir(token.c_str())) {
+      return (void*)(end_state);
+    }
   }
   *error = true;
 }
