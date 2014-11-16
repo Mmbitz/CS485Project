@@ -243,6 +243,9 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     } else {
       int status;
       wait(&status);
+      if (!status) {
+        *error = true;
+      }
       return (void*)(end_state);
     }
   }
@@ -252,7 +255,7 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
       return (void*)(end_state);
     }
     // TODO: fork then exec fn
-    cerr << "FORK + EXEC" << endl;
+    cerr << "BG EXEC" << endl;
   }
   *error = true;
 }
