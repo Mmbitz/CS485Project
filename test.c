@@ -1,10 +1,3 @@
-//THIS IS A TEST FILE FOR THE SYSTEM CALLS, THIS SHOWS BASIC IMPLEMENTATION
-
-//WHEN USING NEXTVARIABLE TO GET THE FIRST ITEM, INSERT A char[256] = ' '; a blank at the beginning will
-//get your the first variable since no other varaibles have spaces at the beginning
-
-//256 size char arrays handle all the items
-
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -59,8 +52,6 @@ main(){
         char def18[256] = "Bus";
         char name19[256] = "Hotdogs";
         char def19[256] = "Truck";
-        char name20[256] = "Spaghetti";
-        char def20[256] = "Car";
 
 
 
@@ -70,7 +61,7 @@ main(){
 
 	int len2 = 256;
 	int len3 = 256;
-	char Prev[256] = "Matt";
+	char Prev[256] = " ";
 	char NameBuff[256];
 	char DefBuff2[256];
 
@@ -163,18 +154,20 @@ main(){
 	int p;
 	retval = 0;
 	int count = 0;
-	printf("\n\nStarting the NextVariable call!\n");
-
-	printf("This is Prev before %s\n", Prev);
-
-	retval = syscall(__NR_NextVariable, Prev, NameBuff, len, DefBuff2, len);
-       	printf("Finished, returned with value %d\n", retval);
-       	printf("This is what was rerturned %s\n", NameBuff);
-       	printf("This is what was rerturned %s\n", DefBuff2);
-
-//Putting returned result into previous
-	for(j = 0; j<256; j++)
+	while (retval == 0)
 	{
-		Prev[j] = NameBuff[j];
+		printf("\n\nStarting the NextVariable call!\n");
+
+		printf("This is Prev before %s\n", Prev);
+
+		retval = syscall(__NR_NextVariable, Prev, NameBuff, len, DefBuff2, len);
+       		printf("Finished, returned with value %d\n", retval);
+       		printf("This is what was rerturned %s\n", NameBuff);
+       		printf("This is what was rerturned %s\n", DefBuff2);
+
+		for(j = 0; j<256; j++)
+		{
+			Prev[j] = NameBuff[j];
+		}
 	}
 }
