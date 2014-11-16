@@ -129,33 +129,41 @@ bool scan(const string &line, string &token, string &type) {
 
 // Pareser stuff
 // typedef void (*state_fn)(string, string, state_fn); // cant do this *sadface*
-typedef void* (*state_fn)(string token_type, string token); // this solution is horrible...
+typedef void* (*state_fn)(string token_type, string token, bool* done, bool* error); // this solution is horrible...
 // void* null_state(string token_type, string token){}
 
-void* null_state(string token_type, string token);
-void* comment_state(string token_type, string token);
-void* defprompt_state(string token_type, string token);
+void* null_state(string token_type, string token, bool* done, bool* error);
+void* comment_state(string token_type, string token, bool* done, bool* error);
+void* defprompt_state(string token_type, string token, bool* done, bool* error);
 
 // state every line starts in
-void* null_state(string token_type, string token){
+void* null_state(string token_type, string token, bool* done, bool* error){
+  cerr << "null state" << endl;
   if (token_type == METACHAR) {
     if (token == COMMENT) {
       return (void*)(*comment_state);
     }
   }
   if (token_type == KEYWORD) {
+    if (token == BYE) {
+      *done = true;
+      return (void*)(null_state);
+    }
     if (token == DEFPROMPT) {
       return (void*)(defprompt_state);
     }
   }
+  *error = true;
 }
 
 // special consumer state, only for comments
-void* comment_state(string token_type, string token){
+void* comment_state(string token_type, string token, bool* done, bool* error){
+  cerr << "comment state" << endl;
   return (void*)(comment_state);
 }
 
-void* defprompt_state(string token_type, string token){
+void* defprompt_state(string token_type, string token, bool* done, bool* error){
+  cerr << "defprompt state" << endl;
   if (token_type == STRING) {
     PROMPT = token;
   }
@@ -164,14 +172,24 @@ void* defprompt_state(string token_type, string token){
 
 int main() {
 	string input;
-	cout << PROMPT;
+	bool done = false;
+  cout << PROMPT;
   while(getline(cin, input)) {
 		string token;
 		string type;
+    bool error = false;
 		state_fn curr_state = null_state;
     while (scan(input, token, type)) {
 			cout << "Token Type = " << type << "	Token = " << token << endl;
-		  curr_state = (state_fn)(curr_state(type, token));
+		  curr_state = (state_fn)(curr_state(type, token, &done, &error));
+      if (error) {
+        cerr << "ERROR!" << endl;
+        break;
+      }
+    }
+    if (done) {
+      cout << "bye!" << endl;
+      break;
     }
 	  cout << PROMPT;
 	}
