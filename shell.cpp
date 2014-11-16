@@ -225,7 +225,9 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
   cerr << "arg state" << endl;
   if (token_type == WORD || token_type == STRING || token_type == VARIABLE) {
     const char* arg = token.c_str();
-    //if ()
+    if (token_type == VARIABLE) {
+      int err = syscall(__NR_GetVariable, token.c_str(), arg, 256); //works?
+    }
     // TODO: expand token from system vars
     exec_params.push_back((string)(arg));
     if (tokenPosition != tokens.size()) {
