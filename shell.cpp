@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <unistd.h>
 
 using namespace std;
 
@@ -130,7 +131,6 @@ bool scan(const string &line, string &token, string &type) {
 // Pareser stuff
 // typedef void (*state_fn)(string, string, state_fn); // cant do this *sadface*
 typedef void* (*state_fn)(string token_type, string token, bool* done, bool* error); // this solution is horrible...
-// void* null_state(string token_type, string token){}
 
 void* null_state(string token_type, string token, bool* done, bool* error);
 void* comment_state(string token_type, string token, bool* done, bool* error);
@@ -212,8 +212,14 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     if (tokenPosition != tokens.size()) {
       return (void*)(arg_state);
     }
-    // TODO: exec fn
     cerr << "EXEC" << endl;
+    const char **args = new const char*[exec_params.size()+1];
+    for (int i = 0; i < exec_params.size()+1; ++i) {
+      args[i] = exec_params[i].c_str();
+    } 
+    args[exec_params.size()+1] = NULL;
+
+    execv(exec_params[0].c_str(), (char**)args);
   }
   if (token_type == KEYWORD && token == BG) {
     if (tokenPosition != tokens.size()) {
