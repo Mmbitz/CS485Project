@@ -3,8 +3,11 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/syscall.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 using namespace std;
 
@@ -232,9 +235,15 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     } 
     args[exec_params.size()+1] = NULL;
 
-    execv(exec_params[0].c_str(), (char**)args);
-    
-    return (void*)(end_state);
+    pid_t pid = fork();
+    if (pid == 0) {
+      execv(args[0], (char**)args);
+      exit(0);
+    } else {
+      int status;
+      wait(&status);
+      return (void*)(end_state);
+    }
   }
   if (token_type == KEYWORD && token == BG) {
     if (tokenPosition != tokens.size()) {
