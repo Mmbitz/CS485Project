@@ -211,11 +211,10 @@ void* defprompt_state(string token_type, string token, bool* done, bool* error){
 void* cd_state(string token_type, string token, bool* done, bool* error) {
   cerr << "cd state" << endl;
   if (token_type == WORD) {
-    // TODO: chdir()
-  } else {
-    *error = true;
+    chdir(token.c_str());
+    return (void*)(end_state);
   }
-  return (void*)(end_state);
+  *error = true;
 }
 
 void* arg_state(string token_type, string token, bool* done, bool* error) {
@@ -234,6 +233,8 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     args[exec_params.size()+1] = NULL;
 
     execv(exec_params[0].c_str(), (char**)args);
+    
+    return (void*)(end_state);
   }
   if (token_type == KEYWORD && token == BG) {
     if (tokenPosition != tokens.size()) {
