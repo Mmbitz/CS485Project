@@ -1,4 +1,4 @@
-Instalation
+Installation
 ======
 
 Installing the system calls, the guide from Dr. Griff was followed.
@@ -14,6 +14,13 @@ No special algorithms were used in these files, they are mostly very straight fo
 
 Algorithms
 ----------
+
+Scanner
+======
+
+The scanner takes in a line of input, and returns a token and its type each time it is called.  The scanner returns false once the end of line has been reached.  There are two parts to the scanner: the tokenizer and the classifier.  
+
+The tokenizer breaks up the line of input into seperate tokens.  Utilizing STL functions made this rather simple; each iteration, the next white space character was found, and the tokens were then extracted between white space.  A special case involving strings needed to be handled, since white space should be preserved within them.  After the tokens have been extracted, classification follows. This was done simply by checking the format using if-else statements.
 
 Parser
 ======
