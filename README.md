@@ -3,16 +3,16 @@ Project 3 Readme
 
 Contributors
 ------------
-Matthew Bizer
-Connor Greenwell
-Megan Worley
+Matthew Bizer\n
+Connor Greenwell\n
+Megan Worley\n
 Weiyi Peng
 
 Files Included
 --------------
-Doc.MD
-svsh/shell.cpp
-p3syscalls/GetVariable.c
-p3syscalls/GlobalDef.c
-p3syscalls/NextVariable.c
-p3syscalls/SaveVariable.c
+Doc.MD\n
+svsh/shell.cpp\n
+p3syscalls/GetVariable.c\n
+p3syscalls/GlobalDef.c\n
+p3syscalls/NextVariable.c\n
+p3syscalls/SaveVariable.c\n
