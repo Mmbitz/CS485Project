@@ -1,5 +1,18 @@
-CS485Project
-============
+Project 3 Readme
+================
 
-A hub for all files dealing with our CS485 project
-s
+Contributors
+------------
+Matthew Bizer
+Connor Greenwell
+Megan Worley
+Weiyi Peng
+
+Files Included
+--------------
+Doc.MD
+svsh/shell.cpp
+p3syscalls/GetVariable.c
+p3syscalls/GlobalDef.c
+p3syscalls/NextVariable.c
+p3syscalls/SaveVariable.c
