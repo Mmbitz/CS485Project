@@ -150,6 +150,7 @@ void* defprompt_state(string token_type, string token, bool* done, bool* error);
 void* cd_state(string token_type, string token, bool* done, bool* error);
 void* arg_state(string token_type, string token, bool* done, bool* error);
 void* set_state(string token_type, string token, bool* done, bool* error);
+void* set_output_state(string token_type, string token, bool* done, bool* error);
 void* assign_state(string token_type, string token, bool* done, bool* error);
 void* end_state(string token_type, string token, bool* done, bool* error);
 static bool remove_job(const pid_t &pid);
@@ -157,6 +158,8 @@ static bool remove_job(const pid_t &pid);
 vector<string> exec_params;
 string assign_to;
 vector<pid_t> background_jobs;
+bool assign_to_var = false;
+string assign_var = "";
 
 // state every line starts in
 void* null_state(string token_type, string token, bool* done, bool* error){
@@ -176,6 +179,10 @@ void* null_state(string token_type, string token, bool* done, bool* error){
     }
     if (token == CD) {
       return (void*)(cd_state);
+    }
+    if (token == ASSIGNTO) {
+      assign_to_var = true;
+      return (void*)(set_output_state);
     }
     if (token == RUN) {
       exec_params.clear();
@@ -317,6 +324,16 @@ void* set_state(string token_type, string token, bool* done, bool* error) {
   *error = true;
 }
 
+void* set_output_state(string token_type, string token, bool* done, bool* error) {
+  cerr << "set output to " << token << endl;
+  if (token_type == VARIABLE) {
+    assign_var = token;
+    return (void*)(arg_state);
+  }
+  assign_var = "";
+  *error = true;
+}
+
 void* assign_state(string token_type, string token, bool* done, bool* error) {
   cerr << assign_to << " " << token << endl;
   if (token_type == STRING || token_type == WORD) {
@@ -359,6 +376,7 @@ int main() {
         break;
       }
     }
+    assign_to_var = false;
     if (done) {
       cout << "bye!" << endl;
       break;
