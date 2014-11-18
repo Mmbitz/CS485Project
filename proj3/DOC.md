@@ -43,10 +43,13 @@ A list of states and who they connect to:
 - arg -> arg, end
   - arg will consume word, string, or variable until it sees none, or
     a <bg> token. when it runs out of valid tokens it will exec them
-- assignto -> 
+- assignto -> arg, end 
 
 Features
 --------
 
 Bugs
 ----
+
+Some calls to {Save,Get}Variable are faulty.
+`assignto` doesnt work correctly.
