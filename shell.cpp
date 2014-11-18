@@ -5,6 +5,7 @@
 #include <string>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <algorithm>
 #include <sys/syscall.h>
 #include <sys/types.h>
@@ -243,13 +244,25 @@ void* cd_state(string token_type, string token, bool* done, bool* error) {
 void* arg_state(string token_type, string token, bool* done, bool* error) {
   cerr << "arg state" << endl;
   if (token_type == WORD || token_type == STRING || token_type == VARIABLE) {
-    const char* arg = token.c_str();
+    string val;
     if (token_type == VARIABLE) {
-      int err = syscall(__NR_GetVariable, token.c_str(), arg, 256); //works?
-      cout << "VAR: " << arg << endl;
+      char name[256];
+      char arg[256];
+
+      strcpy(name, token.c_str());
+
+      int err = syscall(__NR_GetVariable, name, arg, 256); //works?
+      if (err == -1) {
+      	cerr << "BOOM++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+      }
+      cout << "Name: " << name << " VAR: " << arg << endl;
+      
+      val = string(arg);
+    } else {
+      val = token;
     }
     // TODO: expand token from system vars
-    exec_params.push_back((string)(arg));
+    exec_params.push_back(val);
     if (tokenPosition != tokens.size()) {
       return (void*)(arg_state);
     }
@@ -306,10 +319,10 @@ void* set_state(string token_type, string token, bool* done, bool* error) {
 
 void* assign_state(string token_type, string token, bool* done, bool* error) {
   cerr << assign_to << " " << token << endl;
-  if (token_type == STRING) {
+  if (token_type == STRING || token_type == WORD) {
     int err = syscall(__NR_SaveVariable, assign_to.c_str(), token.c_str()); //works?
-    if (err != 0) {
-      assign_to = "";
+    assign_to = "";
+    if (err == 0) {
       return (void*)(end_state);
     }
   }
