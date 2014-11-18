@@ -157,7 +157,7 @@ static bool remove_job(const pid_t &pid);
 
 vector<string> exec_params;
 string assign_to;
-vector<pid_t> background_jobs;
+vector<pid_t> background_jobs; // Holds the list of currently running background jobs.
 bool assign_to_var = false;
 string assign_var = "";
 
@@ -291,6 +291,7 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
       return (void*)(end_state);
     }
   }
+  // Execute a background job if <bg> is at the end of a run command.
   if (token_type == KEYWORD && token == BG) {
     if (tokenPosition != tokens.size()) {
       *error = true;
@@ -304,13 +305,16 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     args[exec_params.size()+1] = NULL;
 
     pid_t pid = fork();
+    // Child should execute the command; parent should add the child to the list of background jobs.
     if (pid == 0) {
         execv(args[0], (char**)args);
         // TODO: Handle bad execs.
         exit(0);
     }
-    else 
+    else {
     	background_jobs.push_back(pid);
+	return (void*)(end_state);
+    }
   }
   *error = true;
 }
@@ -347,6 +351,10 @@ void* assign_state(string token_type, string token, bool* done, bool* error) {
   *error = true;
 }
 
+// Acts as a predicate for checking if a background job should be removed from the list of currently running jobs.
+// Params: 
+// 	pid - The process id of the job to check.
+// returns false if the child is still alive, true otherwise
 static bool remove_job(const pid_t &pid) {
   int status;
   pid_t result = waitpid(pid, &status, WNOHANG);
