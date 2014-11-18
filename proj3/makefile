@@ -1,2 +1,2 @@
-svsh: shell.cpp
-	g++ shell.cpp -o svsh
+all:	
+	g++ svsh/shell.cpp -o shell
