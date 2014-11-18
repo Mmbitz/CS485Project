@@ -5,6 +5,7 @@
 #include <string>
 #include <stdlib.h>
 #include <unistd.h>
+#include <algorithm>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -150,9 +151,11 @@ void* arg_state(string token_type, string token, bool* done, bool* error);
 void* set_state(string token_type, string token, bool* done, bool* error);
 void* assign_state(string token_type, string token, bool* done, bool* error);
 void* end_state(string token_type, string token, bool* done, bool* error);
+static bool remove_job(const pid_t &pid);
 
 vector<string> exec_params;
 string assign_to;
+vector<pid_t> background_jobs;
 
 // state every line starts in
 void* null_state(string token_type, string token, bool* done, bool* error){
@@ -180,6 +183,22 @@ void* null_state(string token_type, string token, bool* done, bool* error){
         return (void*)(end_state);
       }
       return (void*)(arg_state);
+    }
+    if (token == LISTJOBS) {
+      if (tokenPosition != tokens.size()) {
+        *error = true;
+        return (void*)(end_state);
+      }
+      // Update all background jobs and make sure they're still running.  If 
+      // not, remove them from the list.
+      background_jobs.erase(remove_if(background_jobs.begin(), background_jobs.end(), remove_job), background_jobs.end());
+
+      // Iterate over the remaining background jobs and print them.
+      cout << "Background jobs running: " << endl;
+      for (int i = 0; i < background_jobs.size(); i++) {
+        cout << "PID = " << background_jobs[i] << endl;
+      }
+      return (void*)(null_state);
     }
   }
   if (token_type == VARIABLE) {
@@ -227,6 +246,7 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     const char* arg = token.c_str();
     if (token_type == VARIABLE) {
       int err = syscall(__NR_GetVariable, token.c_str(), arg, 256); //works?
+      cout << "VAR: " << arg << endl;
     }
     // TODO: expand token from system vars
     exec_params.push_back((string)(arg));
@@ -256,8 +276,21 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
       *error = true;
       return (void*)(end_state);
     }
-    // TODO: fork then exec fn
     cerr << "BG EXEC" << endl;
+    const char **args = new const char*[exec_params.size()+1];
+    for (int i = 0; i < exec_params.size()+1; ++i) {
+    	args[i] = exec_params[i].c_str();
+    }
+    args[exec_params.size()+1] = NULL;
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        execv(args[0], (char**)args);
+        // TODO: Handle bad execs.
+        exit(0);
+    }
+    else 
+    	background_jobs.push_back(pid);
   }
   *error = true;
 }
@@ -272,6 +305,7 @@ void* set_state(string token_type, string token, bool* done, bool* error) {
 }
 
 void* assign_state(string token_type, string token, bool* done, bool* error) {
+  cerr << assign_to << " " << token << endl;
   if (token_type == STRING) {
     int err = syscall(__NR_SaveVariable, assign_to.c_str(), token.c_str()); //works?
     if (err != 0) {
@@ -281,6 +315,17 @@ void* assign_state(string token_type, string token, bool* done, bool* error) {
   }
   assign_to = "";
   *error = true;
+}
+
+static bool remove_job(const pid_t &pid) {
+  int status;
+  pid_t result = waitpid(pid, &status, WNOHANG);
+  if (result == 0) {
+    return false; // Child is still alive.
+  }
+  else {
+    return true; // Child has terminated, or an error occurred.
+  }
 }
 
 int main() {
