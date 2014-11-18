@@ -10,6 +10,7 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <cstdio>
 
 using namespace std;
 
@@ -38,6 +39,8 @@ const string BYE = "bye";
 const string RUN = "run";
 const string ASSIGNTO = "assignto";
 const string BG = "<bg>";
+char SHOWTOKENS[256] = "$ShowTokens";
+char PATH[256] = "$PATH";
 
 vector<string> tokens; // Stores the seperately parsed tokens after the tokenize call, but before classification.
 int tokenPosition; // Stores the index of the current token being scanned.
@@ -283,7 +286,6 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     pid_t pid = fork();
     if (pid == 0) {
       execv(args[0], (char**)args);
-      // TODO: handle bad execs
       exit(0);
     } else {
       int status;
@@ -297,7 +299,6 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
       *error = true;
       return (void*)(end_state);
     }
-    cerr << "BG EXEC" << endl;
     const char **args = new const char*[exec_params.size()+2];
     for (int i = 0; i < exec_params.size()+1; ++i) {
     	args[i] = exec_params[i].c_str();
@@ -367,29 +368,35 @@ static bool remove_job(const pid_t &pid) {
 }
 
 int main() {
-   syscall(__NR_GlobalDef, 1);
-	string input;
-	bool done = false;
-  cout << PROMPT;
-  while(getline(cin, input)) {
-		string token;
-		string type;
-    bool error = false;
-		state_fn curr_state = null_state;
-    while (scan(input, token, type)) {
-			cout << tokenPosition << "/" << tokens.size() << ": Token Type = " << type << "	Token = " << token << endl;
-		  curr_state = (state_fn)(curr_state(type, token, &done, &error));
-      if (error) {
-        cerr << "ERROR!" << endl;
-        break;
-      }
-    }
-    assign_to_var = false;
-    if (done) {
-      cout << "bye!" << endl;
-      break;
-    }
-	  cout << PROMPT;
+    syscall(__NR_GlobalDef, 1);
+    syscall(__NR_SaveVariable, SHOWTOKENS, "1"); 
+    string input;
+    bool done = false;
+    cout << PROMPT;
+    while(getline(cin, input)) {
+        string token;
+        string type;
+        char showTokensDef[256];
+        bool error = false;
+        state_fn curr_state = null_state;
+        int retval = syscall(__NR_GetVariable, SHOWTOKENS, showTokensDef, 256);
+        while (scan(input, token, type)) {
+	    if (strcmp(showTokensDef, "1") == 0) {
+	        cout << tokenPosition << "/" << tokens.size() << ": Token Type = " << type << "	Token = " << token << endl;
+            }
+	    if (!error) {
+            	curr_state = (state_fn)(curr_state(type, token, &done, &error));
+            }
+        }
+        assign_to_var = false;
+        if (error) {
+		cout << "An error has occurred.  Please make sure your command is valid."<<endl;
 	}
-	return 0;
+	if (done) {
+            cout << "bye!" << endl;
+            break;
+        }
+	cout << PROMPT;
+    }	
+    return 0;
 }
