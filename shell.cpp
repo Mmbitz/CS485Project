@@ -329,6 +329,7 @@ static bool remove_job(const pid_t &pid) {
 }
 
 int main() {
+   syscall(__NR_GlobalDef, 1);
 	string input;
 	bool done = false;
   cout << PROMPT;
