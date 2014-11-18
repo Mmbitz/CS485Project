@@ -260,7 +260,7 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
 
       int err = syscall(__NR_GetVariable, name, arg, 256); //works?
       if (err == -1) {
-      	cerr << "BOOM++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+      	cerr << "BOOM" << endl;
       }
       cout << "Name: " << name << " VAR: " << arg << endl;
       
@@ -339,12 +339,21 @@ void* set_output_state(string token_type, string token, bool* done, bool* error)
 }
 
 void* assign_state(string token_type, string token, bool* done, bool* error) {
-  cerr << assign_to << " " << token << endl;
-  if (token_type == STRING || token_type == WORD) {
-    int err = syscall(__NR_SaveVariable, assign_to.c_str(), token.c_str()); //works?
+  cerr << assign_to << " " << assign_to << " -> " << token << endl;
+  if (token_type == STRING) {
+    char name[256];
+    char val[256];
+    strcpy(name, assign_to.c_str());
+    strcpy(val, token.c_str());
+    
+    cerr << "NAME: " << name << " VAL: " << val << endl;
+    
+    int err = syscall(__NR_SaveVariable, name, val); //works?
     assign_to = "";
     if (err == 0) {
       return (void*)(end_state);
+    } else {
+      cerr << "BORKED" << endl;
     }
   }
   assign_to = "";
@@ -367,7 +376,8 @@ static bool remove_job(const pid_t &pid) {
 }
 
 int main() {
-   syscall(__NR_GlobalDef, 1);
+  int res = syscall(__NR_GlobalDef, 1);
+  cerr << res << endl;
 	string input;
 	bool done = false;
   cout << PROMPT;
