@@ -166,7 +166,7 @@ string assign_var = "";
 
 // state every line starts in
 void* null_state(string token_type, string token, bool* done, bool* error){
-  cerr << "null state" << endl;
+  //cerr << "null state" << endl;
   if (token_type == METACHAR) {
     if (token == COMMENT) {
       return (void*)(*comment_state);
@@ -221,18 +221,18 @@ void* null_state(string token_type, string token, bool* done, bool* error){
 
 // should never be called except in error
 void* end_state(string token_type, string token, bool* done, bool* error) {
-  cerr << "end state" << endl;
+  //cerr << "end state" << endl;
   *error = true;
 }
 
 // special consumer state, only for comments
 void* comment_state(string token_type, string token, bool* done, bool* error){
-  cerr << "comment state" << endl;
+  //cerr << "comment state" << endl;
   return (void*)(comment_state);
 }
 
 void* defprompt_state(string token_type, string token, bool* done, bool* error){
-  cerr << "defprompt state" << endl;
+  //cerr << "defprompt state" << endl;
   if (token_type == STRING) {
     PROMPT = token;
   } else {
@@ -242,7 +242,7 @@ void* defprompt_state(string token_type, string token, bool* done, bool* error){
 }
 
 void* cd_state(string token_type, string token, bool* done, bool* error) {
-  cerr << "cd state" << endl;
+  //cerr << "cd state" << endl;
   if (token_type == WORD) {
     if (!chdir(token.c_str())) {
       return (void*)(end_state);
@@ -252,7 +252,7 @@ void* cd_state(string token_type, string token, bool* done, bool* error) {
 }
 
 void* arg_state(string token_type, string token, bool* done, bool* error) {
-  cerr << "arg state" << endl;
+  //cerr << "arg state" << endl;
   if (token_type == WORD || token_type == STRING || token_type == VARIABLE) {
     string val;
     if (token_type == VARIABLE) {
@@ -263,7 +263,7 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
 
       int err = syscall(__NR_GetVariable, name, arg, 256); //works?
       if (err == -1) {
-      	cerr << "BOOM" << endl;
+      	//cerr << "BOOM" << endl;
       }
       cout << "Name: " << name << " VAR: " << arg << endl;
       
@@ -276,21 +276,39 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
     if (tokenPosition != tokens.size()) {
       return (void*)(arg_state);
     }
-    cerr << "EXEC" << endl;
+    //cerr << "EXEC" << endl;
     const char **args = new const char*[exec_params.size()+2];
     for (int i = 0; i < exec_params.size()+1; ++i) {
       args[i] = exec_params[i].c_str();
     } 
     args[exec_params.size()+1] = NULL;
 
-    pid_t pid = fork();
-    if (pid == 0) {
-      execv(args[0], (char**)args);
-      exit(0);
+    if (assign_to_var) {
+      int fd[2];
+      char* buffer = (char*)malloc(sizeof(char[256]));
+      pid_t pid = fork();
+      if (pid == 0) {
+        dup2(fd[1], STDOUT_FILENO);
+        execv(args[0], (char**)args);
+        exit(1);
+      } else {
+        int status;
+        waitpid(pid, &status, 0);
+        read(fd[0], buffer, 256);
+	buffer[255] = '\0';
+	cout << "OUT: " << buffer << endl;
+	return (void*)(end_state);
+      } 
     } else {
-      int status;
-      waitpid(pid, &status, 0);
-      return (void*)(end_state);
+      pid_t pid = fork();
+      if (pid == 0) {
+        execv(args[0], (char**)args);
+        exit(0);
+      } else {
+        int status;
+        waitpid(pid, &status, 0);
+        return (void*)(end_state);
+      }
     }
   }
   // Execute a background job if <bg> is at the end of a run command.
@@ -321,7 +339,7 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
 }
 
 void* set_state(string token_type, string token, bool* done, bool* error) {
-  cerr << "set state" << endl;
+  //cerr << "set state" << endl;
   if (token_type == METACHAR && token == ASSIGNMENT) {
     return (void*)(assign_state);
   }
@@ -330,7 +348,7 @@ void* set_state(string token_type, string token, bool* done, bool* error) {
 }
 
 void* set_output_state(string token_type, string token, bool* done, bool* error) {
-  cerr << "set output to " << token << endl;
+  //cerr << "set output to " << token << endl;
   if (token_type == VARIABLE) {
     assign_var = token;
     return (void*)(arg_state);
@@ -340,21 +358,20 @@ void* set_output_state(string token_type, string token, bool* done, bool* error)
 }
 
 void* assign_state(string token_type, string token, bool* done, bool* error) {
-  cerr << assign_to << " " << assign_to << " -> " << token << endl;
+  //cerr << assign_to << " " << assign_to << " -> " << token << endl;
   if (token_type == STRING) {
     char name[256];
     char val[256];
     strcpy(name, assign_to.c_str());
     strcpy(val, token.c_str());
-    
-    cerr << "NAME: " << name << " VAL: " << val << endl;
+    //cerr << "NAME: " << name << " VAL: " << val << endl;
     
     int err = syscall(__NR_SaveVariable, name, val); //works?
     assign_to = "";
     if (err == 0) {
       return (void*)(end_state);
     } else {
-      cerr << "BORKED" << endl;
+      //cerr << "BORKED" << endl;
     }
   }
   assign_to = "";
