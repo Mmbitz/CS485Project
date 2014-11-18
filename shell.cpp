@@ -274,7 +274,7 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
       return (void*)(arg_state);
     }
     cerr << "EXEC" << endl;
-    const char **args = new const char*[exec_params.size()+1];
+    const char **args = new const char*[exec_params.size()+2];
     for (int i = 0; i < exec_params.size()+1; ++i) {
       args[i] = exec_params[i].c_str();
     } 
@@ -297,7 +297,7 @@ void* arg_state(string token_type, string token, bool* done, bool* error) {
       return (void*)(end_state);
     }
     cerr << "BG EXEC" << endl;
-    const char **args = new const char*[exec_params.size()+1];
+    const char **args = new const char*[exec_params.size()+2];
     for (int i = 0; i < exec_params.size()+1; ++i) {
     	args[i] = exec_params[i].c_str();
     }
